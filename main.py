@@ -57,6 +57,26 @@ def whois(update: Update, context: CallbackContext) -> None:
         escaped_response = escape_markdown(response)
         update.message.reply_text(escaped_response, parse_mode=ParseMode.MARKDOWN)
 
+def deregister(update: Update, context: CallbackContext) -> None:
+    """Deregister a nickname for a user."""
+    user = update.message.from_user
+    if len(context.args) != 1:
+        update.message.reply_text('Usage: /deregister <nickname>')
+        return
+
+    nickname = context.args[0].lower()
+
+    cursor.execute('SELECT nickname FROM nicknames WHERE nickname = ? AND username = ?', (nickname, user.username))
+    row = cursor.fetchone()
+    if not row:
+        update.message.reply_text(f'Nickname "{nickname}" is not registered by you.')
+        return
+
+    cursor.execute('DELETE FROM nicknames WHERE nickname = ? AND username = ?', (nickname, user.username))
+    conn.commit()
+
+    update.message.reply_text(f'Nickname "{nickname}" deregistered successfully!')
+
 def main() -> None:
     """Start the bot."""
     updater = Updater(BOT_TOKEN)
@@ -66,6 +86,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("register", register))
     dispatcher.add_handler(CommandHandler("whois", whois))
+    dispatcher.add_handler(CommandHandler("deregister", deregister))
 
     updater.start_polling()
     updater.idle()
