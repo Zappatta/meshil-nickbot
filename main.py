@@ -53,7 +53,9 @@ def whois(update: Update, context: CallbackContext) -> None:
         response = ""
         for row in rows:
             response += f'Nickname "{row[0]}" is registered by @{row[1]}\n'
-        update.message.reply_text(response, parse_mode=ParseMode.MARKDOWN)
+
+        escaped_response = escape_markdown(response)
+        update.message.reply_text(escaped_response, parse_mode=ParseMode.MARKDOWN)
 
 def main() -> None:
     """Start the bot."""
@@ -67,6 +69,11 @@ def main() -> None:
 
     updater.start_polling()
     updater.idle()
+
+
+def escape_markdown(text):
+    escape_chars = '_*[]()~`>#+-=|{}.!'
+    return ''.join('\\' + char if char in escape_chars else char for char in text)
 
 if __name__ == '__main__':
     main()
