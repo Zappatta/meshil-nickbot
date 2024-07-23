@@ -44,11 +44,11 @@ def whois(update: Update, context: CallbackContext) -> None:
         return
 
     nickname = context.args[0].lower()
-    cursor.execute('SELECT nickname, username FROM nicknames WHERE nickname LIKE ?', (nickname + '%',))
+    cursor.execute('SELECT nickname, username FROM nicknames WHERE nickname LIKE ?', ('%' + nickname + '%',))
     rows = cursor.fetchall()
 
     if not rows:
-        update.message.reply_text(f'No one has registered a nickname starting with "{nickname}".')
+        update.message.reply_text(f'No one has registered a nickname with "{nickname}".')
     else:
         response = ""
         for row in rows:
