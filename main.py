@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 conn = sqlite3.connect('nicknames.db', check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS nicknames
-                  (nickname TEXT, username TEXT)''')
+                  (nickname TEXT, user_id INTEGER, username TEXT, first_name TEXT)''')
 conn.commit()
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -32,7 +32,8 @@ def register(update: Update, context: CallbackContext) -> None:
         return
 
     nickname = context.args[0].lower()
-    cursor.execute('INSERT INTO nicknames (nickname, username) VALUES (?, ?)', (nickname, user.username))
+    cursor.execute('INSERT INTO nicknames (nickname, user_id, username, first_name) VALUES (?, ?, ?, ?)', 
+                  (nickname, user.id, user.username, user.first_name))
     conn.commit()
 
     update.message.reply_text(f'Nickname "{nickname}" registered successfully!')
@@ -44,7 +45,7 @@ def whois(update: Update, context: CallbackContext) -> None:
         return
 
     nickname = context.args[0].lower()
-    cursor.execute('SELECT nickname, username FROM nicknames WHERE nickname LIKE ?', ('%' + nickname + '%',))
+    cursor.execute('SELECT nickname, user_id, username, first_name FROM nicknames WHERE nickname LIKE ?', ('%' + nickname + '%',))
     rows = cursor.fetchall()
 
     if not rows:
@@ -52,7 +53,10 @@ def whois(update: Update, context: CallbackContext) -> None:
     else:
         response = ""
         for row in rows:
-            response += f'Nickname "{row[0]}" is registered by @{row[1]}\n'
+            if row[2]:  # If username exists
+                response += f'Nickname "{row[0]}" is registered by @{row[2]} ({row[3]})\n'
+            else:  # If username doesn't exist
+                response += f'Nickname "{row[0]}" is registered by {row[3]} (ID: {row[1]})\n'
 
         escaped_response = escape_markdown(response)
         update.message.reply_text(escaped_response, parse_mode=ParseMode.MARKDOWN)
@@ -66,13 +70,13 @@ def deregister(update: Update, context: CallbackContext) -> None:
 
     nickname = context.args[0].lower()
 
-    cursor.execute('SELECT nickname FROM nicknames WHERE nickname = ? AND username = ?', (nickname, user.username))
+    cursor.execute('SELECT nickname FROM nicknames WHERE nickname = ? AND user_id = ?', (nickname, user.id))
     row = cursor.fetchone()
     if not row:
         update.message.reply_text(f'Nickname "{nickname}" is not registered by you.')
         return
 
-    cursor.execute('DELETE FROM nicknames WHERE nickname = ? AND username = ?', (nickname, user.username))
+    cursor.execute('DELETE FROM nicknames WHERE nickname = ? AND user_id = ?', (nickname, user.id))
     conn.commit()
 
     update.message.reply_text(f'Nickname "{nickname}" deregistered successfully!')
