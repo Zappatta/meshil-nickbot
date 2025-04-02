@@ -1,4 +1,4 @@
-python-telegram-bot==13.12
+python-telegram-bot==22.0
 pytest==7.4.0
 pytest-cov==6.0.0
 
