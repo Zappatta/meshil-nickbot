@@ -44,6 +44,6 @@ jobs:
         pytest --cov=main --cov-report=xml test_main.py
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         fail_ci_if_error: false
